@@ -75,10 +75,12 @@ Following the format described in the header INFO line:
 
 Where:
 
-| Field       | Description       | Examples            |
-| ----------- | ----------------- | ------------------- |
-| Transcript  | ENST value        | `ENST00000303635.12 | | ENSG        | ENSG gene name    | `ENSG00000171735.21 |
-| NCBI        | NCBI gene name/ID | `GeneID:23261       | | AltName     | Colloquial name   | `CAMTA1             |
-| Strand      | Coding strand     | `+` or `-`          |
-| ElementType | Type of feature   | `intron` or `exon`  |
-| ElementNum  | Feature number    | `1`..`N`            |
+| Field       | Description       | Examples             |
+| ----------- | ----------------- | -------------------- |
+| Transcript  | ENST value        | `ENST00000303635.12` |
+| ENSG        | ENSG gene name    | `ENSG00000171735.21` |
+| NCBI        | NCBI gene name/ID | `GeneID:23261`       |
+| AltName     | Colloquial name   | `CAMTA1`             |
+| Strand      | Coding strand     | `+` or `-`           |
+| ElementType | Type of feature   | `intron` or `exon`   |
+| ElementNum  | Feature number    | `1`..`N`             |
