@@ -1,0 +1,4 @@
+click
+natsort
+pandas
+pysam
