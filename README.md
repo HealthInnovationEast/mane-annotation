@@ -59,6 +59,17 @@ bcftools annotate \
  Manta_SAMPLE.candidateSV.vcf.gz
 ```
 
+Depending on type of variants being processed you may also want to include:
+
+```
+ --merge-logic AnnotMANE:unique
+```
+
+This is not recommended for long variants such as tandem duplications.  You would need to split those out of the input
+to prevent very long records/bloat.
+
+NOTE: `--merge-logic` is experimental, default behaviour is the "first hit".
+
 ## Annotation format
 
 The annotation is appended to the `INFO` field with the tag `AnnotMANE`:
