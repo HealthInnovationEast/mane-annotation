@@ -89,27 +89,22 @@ The annotation is appended to the `INFO` field with the tag `AnnotMANE`:
 
 Following the format is described in the header INFO line:
 
-`bcftools` method:
-
-```
-##INFO=<ID=AnnotMANE,Number=.,Type=String,Description="Transcript|ENSG|NCBI|AltName|Strand|ElementType|ElementNum">
-```
-
-`manta-mane-annotate.py` method:
-
 ```
 ##INFO=<ID=AnnotMANE,Number=.,Type=String,Description="End|Transcript|ENSG|NCBI|AltName|Strand|ElementType|ElementNum">
 ```
 
 Where:
 
-| Field       | Description                        | Examples              | Note                          |
-| ----------- | ---------------------------------- | --------------------- | ----------------------------- |
-| End         | Which end of event this applies to | `low`, `high`, `both` | `manta-mane-annotate.py` only |
-| Transcript  | ENST value                         | `ENST00000303635.12`  |                               |
-| ENSG        | ENSG gene name                     | `ENSG00000171735.21`  |                               |
-| NCBI        | NCBI gene name/ID                  | `GeneID:23261`        |                               |
-| AltName     | Colloquial name                    | `CAMTA1`              |                               |
-| Strand      | Coding strand                      | `+` or `-`            |                               |
-| ElementType | Type of feature                    | `intron` or `exon`    |                               |
-| ElementNum  | Feature number                     | `1`..`N`              |                               |
+| Field            | Description                        | Examples             |
+| ---------------- | ---------------------------------- | -------------------- |
+| End <sup>+</sup> | Which end of event this applies to | `low`, `high`, `.`   |
+| Transcript       | ENST value                         | `ENST00000303635.12` |
+| ENSG             | ENSG gene name                     | `ENSG00000171735.21` |
+| NCBI             | NCBI gene name/ID                  | `GeneID:23261`       |
+| AltName          | Colloquial name                    | `CAMTA1`             |
+| Strand           | Coding strand                      | `+` or `-`           |
+| ElementType      | Type of feature                    | `intron` or `exon`   |
+| ElementNum       | Feature number                     | `1`..`N`             |
+
+<sup>+</sup> Only indicates low/high when annotating events with `manta-mane-annotate.py`, where same annotation for both
+`.` is expected.

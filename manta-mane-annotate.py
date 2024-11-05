@@ -19,7 +19,7 @@ def _format_hits(tbx: pysam.TabixFile, rec: pysam.VariantRecord):
         high.append(row[3])
     if "".join(low) == "".join(high):
         for h in low:
-            hits.append(f"both|{h}")
+            hits.append(f".|{h}")
     else:
         for h in low:
             hits.append(f"low|{h}")
