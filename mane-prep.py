@@ -12,7 +12,7 @@ from natsort import natsort_keygen
 
 BED_HEADER = ("#CHROM", "BEG", "END", "AnnotMANE")
 
-INFO_LINE = '##INFO=<ID=AnnotMANE,Number=.,Type=String,Description="Transcript|ENSG|NCBI|AltName|Strand|ElementType|ElementNum">'
+INFO_LINE = '##INFO=<ID=AnnotMANE,Number=.,Type=String,Description="End|Transcript|ENSG|NCBI|AltName|Strand|ElementType|ElementNum">'
 
 COLS = ("CHROM", "BEG", "END", "AnnotMANE")
 
