@@ -1,5 +1,10 @@
 # CHANGES
 
+## 0.2.0
+
+- Adds `manta-mane-annotate.py` script to allow better control of how annotation is applied.
+- Minor change to annotation string, see [README.md](README.md#annotation-format)
+
 ## 0.1.2
 
 Documentation regarding tandem duplications and experimental bcftools option.
