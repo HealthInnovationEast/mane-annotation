@@ -1,5 +1,9 @@
 # CHANGES
 
+## 1.0.0
+
+Breakend behaviour is expanded.
+
 ## 0.2.0
 
 - Adds `manta-mane-annotate.py` script to allow better control of how annotation is applied.
