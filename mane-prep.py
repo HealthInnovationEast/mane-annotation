@@ -61,6 +61,9 @@ def mane(mane, gencode, outstub):
     df_mane = pd.read_csv(mane, sep="\t", compression=compression(mane))
     cols_mane = ["name", "geneName", "geneName2", "ncbiGene", "maneStat"]
     df_mane = df_mane[cols_mane]
+    # VCF files don't allow spaces in INFO fields, fix here
+    df_mane["maneStat"] = df_mane["maneStat"].replace("MANE Select", "Select")
+    df_mane["maneStat"] = df_mane["maneStat"].replace("MANE Plus Clinical", "Plus_Clinical")
     df_gencode = pd.read_csv(gencode, sep="\t", compression=compression(gencode))
     cols_gencode = ["name", "chrom", "strand", "exonCount", "exonStarts", "exonEnds"]
     df_gencode = df_gencode[cols_gencode]
