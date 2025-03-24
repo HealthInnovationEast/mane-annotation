@@ -12,7 +12,9 @@ from natsort import natsort_keygen
 
 BED_HEADER = ("#CHROM", "BEG", "END", "AnnotMANE")
 
-INFO_LINE = '##INFO=<ID=AnnotMANE,Number=.,Type=String,Description="End|Transcript|ENSG|NCBI|AltName|ManeType|Strand|ElementType|ElementNum">'
+INFO_DESC = "End|Transcript|ENSG|NCBI|AltName|ManeType|Strand|ElementType|ElementNum"
+INFO_LINE_A = f'##INFO=<ID=AnnotMANEbp1,Number=.,Type=String,Description="{INFO_DESC}">'
+INFO_LINE_B = f'##INFO=<ID=AnnotMANEbp2,Number=.,Type=String,Description="{INFO_DESC}">'
 
 COLS = ("CHROM", "BEG", "END", "AnnotMANE")
 
@@ -46,7 +48,8 @@ def to_tabix(outfile, frames):
 def annot_files(outfile):
     """Generate the header and column input files for bcftools."""
     with open(f"{outfile}.hdr", "w") as ofh:
-        print(INFO_LINE, file=ofh)
+        print(INFO_LINE_A, file=ofh)
+        print(INFO_LINE_B, file=ofh)
     with open(f"{outfile}.cols", "w") as ofh:
         for l in COLS:
             print(l, file=ofh)
