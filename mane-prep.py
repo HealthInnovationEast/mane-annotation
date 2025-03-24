@@ -12,7 +12,7 @@ from natsort import natsort_keygen
 
 BED_HEADER = ("#CHROM", "BEG", "END", "AnnotMANE")
 
-INFO_LINE = '##INFO=<ID=AnnotMANE,Number=.,Type=String,Description="End|Transcript|ENSG|NCBI|AltName|Strand|ElementType|ElementNum">'
+INFO_LINE = '##INFO=<ID=AnnotMANE,Number=.,Type=String,Description="End|Transcript|ENSG|NCBI|AltName|ManeType|Strand|ElementType|ElementNum">'
 
 COLS = ("CHROM", "BEG", "END", "AnnotMANE")
 
@@ -55,11 +55,11 @@ def annot_files(outfile):
 @click.command()
 @click.option("--mane", required=True, help="Mane transcript list from UCSC Table Browser (opt gz)")
 @click.option("--gencode", required=True, help="Gencode comprehensive from UCSC Table Browser (opt gz)")
-@click.option("--outstub", required=True, help="Path prefix for output, no file extensions")
+@click.option("--outstub", required=True, help="Path prefix for output, no file extensions, folders must exist")
 def mane(mane, gencode, outstub):
     """Driver function to generate annotation ready files from UCSC table outputs."""
     df_mane = pd.read_csv(mane, sep="\t", compression=compression(mane))
-    cols_mane = ["name", "geneName", "geneName2", "ncbiGene"]
+    cols_mane = ["name", "geneName", "geneName2", "ncbiGene", "maneStat"]
     df_mane = df_mane[cols_mane]
     df_gencode = pd.read_csv(gencode, sep="\t", compression=compression(gencode))
     cols_gencode = ["name", "chrom", "strand", "exonCount", "exonStarts", "exonEnds"]
@@ -105,7 +105,7 @@ def mane(mane, gencode, outstub):
                 }
             )
 
-        attributes = [row.name, row.geneName, row.ncbiGene, row.geneName2]
+        attributes = [row.name, row.geneName, row.ncbiGene, row.geneName2, row.maneStat]
 
         for ent in blocks:
             annotation = "|".join([*attributes, row.strand, str(ent["type"]), str(ent["num"])])
