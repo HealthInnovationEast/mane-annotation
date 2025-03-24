@@ -42,7 +42,7 @@ def _breakend_coord(rec: pysam.VariantRecord):
     return chrom, start, end
 
 
-def _end_hits(tbx: pysam.TabixFile, chrom: str, start: int, end: int) -> List[str]:
+def _end_hits(tbx: pysam.TabixFile, mane_type: str, chrom: str, start: int, end: int) -> List[str]:
     """
     Return list of hits for a coordinate set.
 
@@ -51,11 +51,14 @@ def _end_hits(tbx: pysam.TabixFile, chrom: str, start: int, end: int) -> List[st
     hits = []
     if chrom in tbx.contigs:
         for row in tbx.fetch(chrom, start, end):
+            if mane_type != "All":
+                if mane_type not in row[3]:
+                    continue
             hits.append(row[3])
     return hits
 
 
-def _format_hits(tbx: pysam.TabixFile, rec: pysam.VariantRecord):
+def _format_hits(tbx: pysam.TabixFile, mane_type: str, rec: pysam.VariantRecord):
     low, high, hits = [], [], []
     # setup high coords
     (end_chrom, end_start) = (rec.chrom, rec.stop)
@@ -64,8 +67,8 @@ def _format_hits(tbx: pysam.TabixFile, rec: pysam.VariantRecord):
         (end_chrom, end_start, end_stop) = _breakend_coord(rec)
 
     # get the hits
-    low = _end_hits(tbx, rec.chrom, rec.pos, rec.pos + 1)
-    high = _end_hits(tbx, end_chrom, end_start, end_stop)
+    low = _end_hits(tbx, mane_type, rec.chrom, rec.pos, rec.pos + 1)
+    high = _end_hits(tbx, mane_type, end_chrom, end_start, end_stop)
 
     if "".join(low) == "".join(high):
         for h in low:
@@ -79,11 +82,26 @@ def _format_hits(tbx: pysam.TabixFile, rec: pysam.VariantRecord):
         rec.info["AnnotMANE"] = ",".join(hits)
 
 
+def _expand_mane_type(mane_type: str) -> str:
+    value = None
+    if mane_type == "Clinical":
+        value = "Plus_Clinical"
+    else:
+        value = mane_type
+    return value
+
+
 @click.command()
 @click.option("--annotations", required=True, help="Mane annotation bed file (output of mane-prep.py)")
 @click.option("--input", required=True, help="Input vcf (optionally compressed)")
 @click.option("--output", required=True, help="Output vcf (index generated if vcf.gz)")
-def annotate(annotations, input: str, output: str):
+@click.option(
+    "--mode",
+    default="All",
+    help="Type of MANE annotation to include",
+    type=click.Choice(["All", "Select", "Clinical"], case_sensitive=False),
+)
+def annotate(annotations, input: str, output: str, mode: str):
     """Annotates a VCF file with end specific events."""
     tbx = pysam.TabixFile(annotations, parser=pysam.asBed())
     contigs = tbx.contigs
@@ -94,9 +112,10 @@ def annotate(annotations, input: str, output: str):
     )
     vcf_out = pysam.VariantFile(output, "w", header=vcf_in.header)
 
+    mane_type = _expand_mane_type(mode)
     for rec in vcf_in.fetch():
         if rec.chrom in contigs:
-            _format_hits(tbx, rec)
+            _format_hits(tbx, mane_type, rec)
         vcf_out.write(rec)
     vcf_out.close()
     if output.endswith(".gz"):
