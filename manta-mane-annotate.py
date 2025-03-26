@@ -70,16 +70,20 @@ def _format_hits(tbx: pysam.TabixFile, mane_type: str, rec: pysam.VariantRecord)
     low = _end_hits(tbx, mane_type, rec.chrom, rec.pos, rec.pos + 1)
     high = _end_hits(tbx, mane_type, end_chrom, end_start, end_stop)
 
-    if "".join(low) == "".join(high):
-        for h in low:
-            hits.append(f".|{h}")
-    else:
-        for h in low:
-            hits.append(f"low|{h}")
-        for h in high:
-            hits.append(f"high|{h}")
-    if hits:
-        rec.info["AnnotMANE"] = ",".join(hits)
+    # if "".join(low) == "".join(high):
+    #     for h in low:
+    #         hits.append(f".|{h}")
+    # else:
+    #     for h in low:
+    #         hits.append(f"low|{h}")
+    #     for h in high:
+    #         hits.append(f"high|{h}")
+    # if hits:
+    #     rec.info["AnnotMANE"] = ",".join(hits)
+    if low:
+        rec.info["AnnotMANEbp1"] = ",".join(low)
+    if high:
+        rec.info["AnnotMANEbp2"] = ",".join(high)
 
 
 def _expand_mane_type(mane_type: str) -> str:
@@ -89,6 +93,15 @@ def _expand_mane_type(mane_type: str) -> str:
     else:
         value = mane_type
     return value
+
+
+def _expand_header(annotations: str, vcf_head: pysam.VariantHeader):
+    hdr_path = annotations.replace("bed.gz", "") + "hdr"
+    with open(hdr_path, "rt") as hdr_in:
+        info_lines = hdr_in.readlines()
+    for l in info_lines:
+        vcf_head.add_line(l)
+    return vcf_head
 
 
 @click.command()
@@ -107,10 +120,14 @@ def annotate(annotations, input: str, output: str, mode: str):
     contigs = tbx.contigs
     vcf_in = pysam.VariantFile(input)
     print("\tIndex not needed on input, ignore above warning", file=sys.stderr)
-    vcf_in.header.add_line(
-        '##INFO=<ID=AnnotMANE,Number=.,Type=String,Description="End|Transcript|ENSG|NCBI|AltName|Strand|ElementType|ElementNum">'
-    )
-    vcf_out = pysam.VariantFile(output, "w", header=vcf_in.header)
+
+    ### This needs to be read from the name-annotations.hdr file
+    vcf_header = _expand_header(annotations, vcf_in.header)
+
+    # vcf_in.header.add_line(
+    #     '##INFO=<ID=AnnotMANE,Number=.,Type=String,Description="End|Transcript|ENSG|NCBI|AltName|Strand|ElementType|ElementNum">'
+    # )
+    vcf_out = pysam.VariantFile(output, "w", header=vcf_header)
 
     mane_type = _expand_mane_type(mode)
     for rec in vcf_in.fetch():
