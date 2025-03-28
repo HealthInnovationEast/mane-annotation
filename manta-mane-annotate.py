@@ -30,7 +30,6 @@ def _breakend_coord(rec: pysam.VariantRecord):
     alt = rec.alts[0]
     (direct, chrom, pos) = bnd_re.search(alt).group(1, 2, 3)
     pos = int(pos)
-    # print(f"{direct} {chrom} {pos}")
     start, end = None, None
     if direct == "[":
         start = pos
@@ -38,11 +37,10 @@ def _breakend_coord(rec: pysam.VariantRecord):
     else:
         start = pos - 1
         end = pos
-    # print(f"> {chrom} {start} {end}")
     return chrom, start, end
 
 
-def _end_hits(tbx: pysam.TabixFile, chrom: str, start: int, end: int) -> List[str]:
+def _end_hits(tbx: pysam.TabixFile, mane_type: str, chrom: str, start: int, end: int) -> List[str]:
     """
     Return list of hits for a coordinate set.
 
@@ -51,52 +49,69 @@ def _end_hits(tbx: pysam.TabixFile, chrom: str, start: int, end: int) -> List[st
     hits = []
     if chrom in tbx.contigs:
         for row in tbx.fetch(chrom, start, end):
+            if mane_type != "All":
+                if mane_type not in row[3]:
+                    continue
             hits.append(row[3])
     return hits
 
 
-def _format_hits(tbx: pysam.TabixFile, rec: pysam.VariantRecord):
-    low, high, hits = [], [], []
-    # setup high coords
+def _format_hits(tbx: pysam.TabixFile, mane_type: str, rec: pysam.VariantRecord):
+    # setup bp2 coords
     (end_chrom, end_start) = (rec.chrom, rec.stop)
     end_stop = end_start + 1
     if "SVTYPE" in rec.info.keys() and rec.info["SVTYPE"] == "BND":
         (end_chrom, end_start, end_stop) = _breakend_coord(rec)
+    # get hits
+    bp1 = _end_hits(tbx, mane_type, rec.chrom, rec.pos, rec.pos + 1)
+    bp2 = _end_hits(tbx, mane_type, end_chrom, end_start, end_stop)
+    rec.info["AnnotMANEbp1"] = ",".join(bp1)
+    rec.info["AnnotMANEbp2"] = ",".join(bp2)
 
-    # get the hits
-    low = _end_hits(tbx, rec.chrom, rec.pos, rec.pos + 1)
-    high = _end_hits(tbx, end_chrom, end_start, end_stop)
 
-    if "".join(low) == "".join(high):
-        for h in low:
-            hits.append(f".|{h}")
+def _expand_mane_type(mane_type: str) -> str:
+    value = None
+    if mane_type == "Clinical":
+        value = "Plus_Clinical"
     else:
-        for h in low:
-            hits.append(f"low|{h}")
-        for h in high:
-            hits.append(f"high|{h}")
-    if hits:
-        rec.info["AnnotMANE"] = ",".join(hits)
+        value = mane_type
+    return value
+
+
+def _expand_header(annotations: str, vcf_head: pysam.VariantHeader):
+    hdr_path = annotations.replace("bed.gz", "") + "hdr"
+    with open(hdr_path, "rt") as hdr_in:
+        info_lines = hdr_in.readlines()
+    for l in info_lines:
+        vcf_head.add_line(l)
+    return vcf_head
 
 
 @click.command()
 @click.option("--annotations", required=True, help="Mane annotation bed file (output of mane-prep.py)")
 @click.option("--input", required=True, help="Input vcf (optionally compressed)")
 @click.option("--output", required=True, help="Output vcf (index generated if vcf.gz)")
-def annotate(annotations, input: str, output: str):
+@click.option(
+    "--mode",
+    default="All",
+    help="Type of MANE annotation to include",
+    type=click.Choice(["All", "Select", "Clinical"], case_sensitive=False),
+)
+def annotate(annotations, input: str, output: str, mode: str):
     """Annotates a VCF file with end specific events."""
     tbx = pysam.TabixFile(annotations, parser=pysam.asBed())
     contigs = tbx.contigs
     vcf_in = pysam.VariantFile(input)
     print("\tIndex not needed on input, ignore above warning", file=sys.stderr)
-    vcf_in.header.add_line(
-        '##INFO=<ID=AnnotMANE,Number=.,Type=String,Description="End|Transcript|ENSG|NCBI|AltName|Strand|ElementType|ElementNum">'
-    )
-    vcf_out = pysam.VariantFile(output, "w", header=vcf_in.header)
 
+    ### This needs to be read from the name-annotations.hdr file
+    vcf_header = _expand_header(annotations, vcf_in.header)
+    vcf_out = pysam.VariantFile(output, "w", header=vcf_header)
+
+    mane_type = _expand_mane_type(mode)
     for rec in vcf_in.fetch():
         if rec.chrom in contigs:
-            _format_hits(tbx, rec)
+            _format_hits(tbx, mane_type, rec)
         vcf_out.write(rec)
     vcf_out.close()
     if output.endswith(".gz"):

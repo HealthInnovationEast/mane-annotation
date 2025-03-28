@@ -12,9 +12,9 @@ from natsort import natsort_keygen
 
 BED_HEADER = ("#CHROM", "BEG", "END", "AnnotMANE")
 
-INFO_LINE = '##INFO=<ID=AnnotMANE,Number=.,Type=String,Description="End|Transcript|ENSG|NCBI|AltName|Strand|ElementType|ElementNum">'
-
-COLS = ("CHROM", "BEG", "END", "AnnotMANE")
+## TODO - END isn't needed
+INFO_DESC = "Transcript|ENSG|NCBI|AltName|ManeType|Strand|ElementType|ElementNum"
+INFO_LINE = f'##INFO=<ID=AnnotMANE,Number=.,Type=String,Description="{INFO_DESC}">'
 
 
 def compression(filepath):
@@ -47,20 +47,20 @@ def annot_files(outfile):
     """Generate the header and column input files for bcftools."""
     with open(f"{outfile}.hdr", "w") as ofh:
         print(INFO_LINE, file=ofh)
-    with open(f"{outfile}.cols", "w") as ofh:
-        for l in COLS:
-            print(l, file=ofh)
 
 
 @click.command()
 @click.option("--mane", required=True, help="Mane transcript list from UCSC Table Browser (opt gz)")
 @click.option("--gencode", required=True, help="Gencode comprehensive from UCSC Table Browser (opt gz)")
-@click.option("--outstub", required=True, help="Path prefix for output, no file extensions")
+@click.option("--outstub", required=True, help="Path prefix for output, no file extensions, folders must exist")
 def mane(mane, gencode, outstub):
     """Driver function to generate annotation ready files from UCSC table outputs."""
     df_mane = pd.read_csv(mane, sep="\t", compression=compression(mane))
-    cols_mane = ["name", "geneName", "geneName2", "ncbiGene"]
+    cols_mane = ["name", "geneName", "geneName2", "ncbiGene", "maneStat"]
     df_mane = df_mane[cols_mane]
+    # VCF files don't allow spaces in INFO fields, fix here
+    df_mane["maneStat"] = df_mane["maneStat"].replace("MANE Select", "Select")
+    df_mane["maneStat"] = df_mane["maneStat"].replace("MANE Plus Clinical", "Plus_Clinical")
     df_gencode = pd.read_csv(gencode, sep="\t", compression=compression(gencode))
     cols_gencode = ["name", "chrom", "strand", "exonCount", "exonStarts", "exonEnds"]
     df_gencode = df_gencode[cols_gencode]
@@ -105,7 +105,7 @@ def mane(mane, gencode, outstub):
                 }
             )
 
-        attributes = [row.name, row.geneName, row.ncbiGene, row.geneName2]
+        attributes = [row.name, row.geneName, row.ncbiGene, row.geneName2, row.maneStat]
 
         for ent in blocks:
             annotation = "|".join([*attributes, row.strand, str(ent["type"]), str(ent["num"])])
