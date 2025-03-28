@@ -30,7 +30,6 @@ def _breakend_coord(rec: pysam.VariantRecord):
     alt = rec.alts[0]
     (direct, chrom, pos) = bnd_re.search(alt).group(1, 2, 3)
     pos = int(pos)
-    # print(f"{direct} {chrom} {pos}")
     start, end = None, None
     if direct == "[":
         start = pos
@@ -38,7 +37,6 @@ def _breakend_coord(rec: pysam.VariantRecord):
     else:
         start = pos - 1
         end = pos
-    # print(f"> {chrom} {start} {end}")
     return chrom, start, end
 
 
@@ -59,31 +57,16 @@ def _end_hits(tbx: pysam.TabixFile, mane_type: str, chrom: str, start: int, end:
 
 
 def _format_hits(tbx: pysam.TabixFile, mane_type: str, rec: pysam.VariantRecord):
-    low, high, hits = [], [], []
-    # setup high coords
+    # setup bp2 coords
     (end_chrom, end_start) = (rec.chrom, rec.stop)
     end_stop = end_start + 1
     if "SVTYPE" in rec.info.keys() and rec.info["SVTYPE"] == "BND":
         (end_chrom, end_start, end_stop) = _breakend_coord(rec)
-
-    # get the hits
-    low = _end_hits(tbx, mane_type, rec.chrom, rec.pos, rec.pos + 1)
-    high = _end_hits(tbx, mane_type, end_chrom, end_start, end_stop)
-
-    # if "".join(low) == "".join(high):
-    #     for h in low:
-    #         hits.append(f".|{h}")
-    # else:
-    #     for h in low:
-    #         hits.append(f"low|{h}")
-    #     for h in high:
-    #         hits.append(f"high|{h}")
-    # if hits:
-    #     rec.info["AnnotMANE"] = ",".join(hits)
-    if low:
-        rec.info["AnnotMANEbp1"] = ",".join(low)
-    if high:
-        rec.info["AnnotMANEbp2"] = ",".join(high)
+    # get hits
+    bp1 = _end_hits(tbx, mane_type, rec.chrom, rec.pos, rec.pos + 1)
+    bp2 = _end_hits(tbx, mane_type, end_chrom, end_start, end_stop)
+    rec.info["AnnotMANEbp1"] = ",".join(bp1)
+    rec.info["AnnotMANEbp2"] = ",".join(bp2)
 
 
 def _expand_mane_type(mane_type: str) -> str:
@@ -123,10 +106,6 @@ def annotate(annotations, input: str, output: str, mode: str):
 
     ### This needs to be read from the name-annotations.hdr file
     vcf_header = _expand_header(annotations, vcf_in.header)
-
-    # vcf_in.header.add_line(
-    #     '##INFO=<ID=AnnotMANE,Number=.,Type=String,Description="End|Transcript|ENSG|NCBI|AltName|Strand|ElementType|ElementNum">'
-    # )
     vcf_out = pysam.VariantFile(output, "w", header=vcf_header)
 
     mane_type = _expand_mane_type(mode)

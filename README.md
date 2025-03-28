@@ -47,6 +47,8 @@ Fields not specified should be cleared:
 ./mane-prep.py --mane mane-hg38.tsv.gz --gencode gencode-hg38.tsv.gz --outstub mane-annotations
 ```
 
+See `--help` for full command details.
+
 ## Annotate VCF
 
 The included Manta specific annotation script enures only annotation spanning the ends of an event are included.
@@ -58,53 +60,34 @@ The included Manta specific annotation script enures only annotation spanning th
  --annotations mane-annotations.bed.gz \
  --input input.vcf.gz \
  --output annotated.vcf.gz
+ --mode all
 ```
 
-### `bcftools annotate`
+See `--help` for full command details.
 
-```
-bcftools annotate \
- --annotations mane-annotations.bed.gz \
- --header-lines mane-annotations.hdr \
- --columns-file mane-annotations.cols \
- --output-type z \
- --output annotated.vcf.gz \
- input.vcf.gz
-```
+#### `--mode`
 
-Depending on type of variants being processed you may also want to include:
-
-```
- --merge-logic AnnotMANE:unique
-```
-
-This is not recommended for long variants such as tandem duplications.  You would need to split those out of the input
-to prevent very long records/bloat.
-
-NOTE: `--merge-logic` is experimental, default behaviour is the "first hit".
+Allows for limiting the types of MANE annotation that will be applied, selected via `maneStatus` of the table browser output.
 
 ## Annotation format
 
-The annotation is appended to the `INFO` field with the tag `AnnotMANE`:
+The annotation is appended to the `INFO` field with the tags `AnnotMANEbp1`, `AnnotMANEbp2`.  Both are required to handle
+long events.  In the case of `BND` calls the `bp2` entry of record `A` will correspond to `bp1` of record `B`
+and vice-versa.
 
 Following the format is described in the header INFO line:
 
 ```
-##INFO=<ID=AnnotMANE,Number=.,Type=String,Description="End|Transcript|ENSG|NCBI|AltName|Strand|ElementType|ElementNum">
+##INFO=<ID=AnnotMANEbp1,Number=.,Type=String,Description="Transcript|ENSG|NCBI|AltName|Strand|ElementType|ElementNum">
+##INFO=<ID=AnnotMANEbp2,Number=.,Type=String,Description="Transcript|ENSG|NCBI|AltName|Strand|ElementType|ElementNum">
 ```
 
 Where:
 
-| Field            | Description                        | Examples             |
-| ---------------- | ---------------------------------- | -------------------- |
-| End <sup>+</sup> | Which end of event this applies to | `low`, `high`, `.`   |
-| Transcript       | ENST value                         | `ENST00000303635.12` |
-| ENSG             | ENSG gene name                     | `ENSG00000171735.21` |
-| NCBI             | NCBI gene name/ID                  | `GeneID:23261`       |
-| AltName          | Colloquial name                    | `CAMTA1`             |
-| Strand           | Coding strand                      | `+` or `-`           |
-| ElementType      | Type of feature                    | `intron` or `exon`   |
-| ElementNum       | Feature number                     | `1`..`N`             |
-
-<sup>+</sup> Only indicates low/high when annotating events with `manta-mane-annotate.py`, where same annotation for both
-`.` is expected.
+| Field       | Description       | Examples                 |
+| ----------- | ----------------- | ------------------------ |
+| Transcript  | ENST value        | `ENST00000303635.12`     |
+| ENSG        | ENSG gene name    | `ENSG00000171735.21`     |
+| NCBI        | NCBI gene name/ID | `GeneID:23261`           |
+| AltName     | Colloquial name   | `CAMTA1`                 |
+| ManeType    | MANE status       | `Select`, `Plus_Clinical | | Strand      | Coding strand     | `+`or`-`              | | ElementType | Type of feature   |`intron`or`exon`      | | ElementNum  | Feature number    |`1`..`N\`                 |
