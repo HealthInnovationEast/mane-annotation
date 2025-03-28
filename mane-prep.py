@@ -16,8 +16,6 @@ BED_HEADER = ("#CHROM", "BEG", "END", "AnnotMANE")
 INFO_DESC = "Transcript|ENSG|NCBI|AltName|ManeType|Strand|ElementType|ElementNum"
 INFO_LINE = f'##INFO=<ID=AnnotMANE,Number=.,Type=String,Description="{INFO_DESC}">'
 
-COLS = ("CHROM", "BEG", "END", "AnnotMANE")
-
 
 def compression(filepath):
     """Identify if file is compressed and return suitable value for pandas compression attribute."""
@@ -49,9 +47,6 @@ def annot_files(outfile):
     """Generate the header and column input files for bcftools."""
     with open(f"{outfile}.hdr", "w") as ofh:
         print(INFO_LINE, file=ofh)
-    with open(f"{outfile}.cols", "w") as ofh:
-        for l in COLS:
-            print(l, file=ofh)
 
 
 @click.command()

@@ -1,5 +1,14 @@
 # CHANGES
 
+## 2.0.0
+
+- Dropped support for bedtools method due to restrictions for long events
+- Preparation of files using `mane-prep.py` changed to support selection of MANE status.
+  - Regeneration required: `*.bed.gz`, `*.bed.gz.tbi`, `*.hdr`
+  - `*.cols` not needed or generated anymore.
+- `manta-mane-annotate.py`
+  - Split annotation of ends to separate INFO fields `AnnotMANEbp1` & `AnnotMANEbp2` to better support bedpe conversion.
+
 ## 1.0.0
 
 Breakend behaviour is expanded.
