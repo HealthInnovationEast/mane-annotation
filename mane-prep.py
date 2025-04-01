@@ -14,7 +14,8 @@ BED_HEADER = ("#CHROM", "BEG", "END", "AnnotMANE")
 
 ## TODO - END isn't needed
 INFO_DESC = "Transcript|ENSG|NCBI|AltName|ManeType|Strand|ElementType|ElementNum"
-INFO_LINE = f'##INFO=<ID=AnnotMANE,Number=.,Type=String,Description="{INFO_DESC}">'
+INFO_LINE_A = f'##INFO=<ID=AnnotMANEbp1,Number=.,Type=String,Description="{INFO_DESC}">'
+INFO_LINE_B = f'##INFO=<ID=AnnotMANEbp2,Number=.,Type=String,Description="{INFO_DESC}">'
 
 
 def compression(filepath):
@@ -46,7 +47,8 @@ def to_tabix(outfile, frames):
 def annot_files(outfile):
     """Generate the header and column input files for bcftools."""
     with open(f"{outfile}.hdr", "w") as ofh:
-        print(INFO_LINE, file=ofh)
+        print(INFO_LINE_A, file=ofh)
+        print(INFO_LINE_B, file=ofh)
 
 
 @click.command()
