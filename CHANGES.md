@@ -1,5 +1,9 @@
 # CHANGES
 
+## 2.0.1
+
+- Corrected header file generation (missing bp1/bp2)
+
 ## 2.0.0
 
 - Dropped support for bedtools method due to restrictions for long events
