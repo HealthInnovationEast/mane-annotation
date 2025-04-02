@@ -1,5 +1,9 @@
 # CHANGES
 
+## 2.0.2
+
+- Only output info fields if an annotation exists, better conformance with VCF spec
+
 ## 2.0.1
 
 - Corrected header file generation (missing bp1/bp2)
