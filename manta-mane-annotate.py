@@ -7,6 +7,7 @@ Only if low and high lists are identical is "both" used for any annotation.
 """
 import re
 import sys
+from pathlib import Path
 from typing import List
 
 import click
@@ -65,8 +66,10 @@ def _format_hits(tbx: pysam.TabixFile, mane_type: str, rec: pysam.VariantRecord)
     # get hits
     bp1 = _end_hits(tbx, mane_type, rec.chrom, rec.pos, rec.pos + 1)
     bp2 = _end_hits(tbx, mane_type, end_chrom, end_start, end_stop)
-    rec.info["AnnotMANEbp1"] = ",".join(bp1)
-    rec.info["AnnotMANEbp2"] = ",".join(bp2)
+    if bp1:
+        rec.info["AnnotMANEbp1"] = "|".join(bp1)
+    if bp2:
+        rec.info["AnnotMANEbp2"] = "|".join(bp2)
 
 
 def _expand_mane_type(mane_type: str) -> str:
@@ -102,7 +105,8 @@ def annotate(annotations, input: str, output: str, mode: str):
     tbx = pysam.TabixFile(annotations, parser=pysam.asBed())
     contigs = tbx.contigs
     vcf_in = pysam.VariantFile(input)
-    print("\tIndex not needed on input, ignore above warning", file=sys.stderr)
+    if Path(f"{input}.tbi").exists() == False:
+        print("\tIndex not needed on input, ignore warning", file=sys.stderr)
 
     ### This needs to be read from the name-annotations.hdr file
     vcf_header = _expand_header(annotations, vcf_in.header)
