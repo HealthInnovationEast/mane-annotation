@@ -14,6 +14,8 @@ pip install -r requirements.txt
 
 Generate the following files via the USCS Table Browser: https://genome.ucsc.edu/cgi-bin/hgTables
 
+Newer versions of gencode can be used.
+
 Fields not specified should be cleared:
 
 - mane-hg38.tsv.gz
@@ -41,11 +43,33 @@ Fields not specified should be cleared:
   - Output field separator = tsv
   - File type returned = Gzip compressed
 
+### GRCh37
+
+A basic flow for processing against GRCh37 is to use the liftover result for the gencode file.  You do not need
+an updated MANE file as the liftover gencode file retains the GRCh38 ENST IDs (with suffix).
+
+Add the `--liftover` flag when executing `mane-prep.py`, generate the gencode file as follows
+
+- gencode-GRCh37_V46lift37.tsv.gz
+  - Clade = Mammal
+  - Genome = Human
+  - Assembly = Dec. 2013 (GRCh38/hg38)
+  - Group = Genes and Gene Predictions
+  - Track = GENCODE V46lift37
+  - Table = Comprehensive (wgEncodeGencodeCompV46)
+  - Region = Genome
+  - Output format = All fields from selected table
+  - Output filename = gencode-GRCh37_V46lift37.tsv.gz
+  - Output field separator = tsv
+  - File type returned = Gzip compressed
+
 ## Prepare annotations
 
 ```
 ./mane-prep.py --mane mane-hg38.tsv.gz --gencode gencode-hg38.tsv.gz --outstub mane-annotations
 ```
+
+If using a liftover gencode file specify `--liftover` as an option when executing.
 
 See `--help` for full command details.
 
@@ -54,6 +78,8 @@ See `--help` for full command details.
 The included Manta specific annotation script enures only annotation spanning the ends of an event are included.
 
 ### `manta-mane-annotate.py`
+
+Annotations will always use the IDs in the MANE input file.
 
 ```
 ./manta-mane-annotate.py \

@@ -55,7 +55,8 @@ def annot_files(outfile):
 @click.option("--mane", required=True, help="Mane transcript list from UCSC Table Browser (opt gz)")
 @click.option("--gencode", required=True, help="Gencode comprehensive from UCSC Table Browser (opt gz)")
 @click.option("--outstub", required=True, help="Path prefix for output, no file extensions, folders must exist")
-def mane(mane, gencode, outstub):
+@click.option("--liftover", is_flag=True, help="Indicates Gencode is a liftover file and not 38")
+def mane(mane, gencode, outstub, liftover):
     """Driver function to generate annotation ready files from UCSC table outputs."""
     df_mane = pd.read_csv(mane, sep="\t", compression=compression(mane))
     cols_mane = ["name", "geneName", "geneName2", "ncbiGene", "maneStat"]
@@ -66,6 +67,10 @@ def mane(mane, gencode, outstub):
     df_gencode = pd.read_csv(gencode, sep="\t", compression=compression(gencode))
     cols_gencode = ["name", "chrom", "strand", "exonCount", "exonStarts", "exonEnds"]
     df_gencode = df_gencode[cols_gencode]
+    if liftover:
+        df_gencode["nameOriginal"] = df_gencode["name"]
+        # strips the liftover version from the name column
+        df_gencode["name"] = df_gencode["name"].str.replace(r"_[0-9]+$", "", regex=True)
 
     intersected_df = pd.merge(df_mane, df_gencode, on="name", how="inner")
 
@@ -111,6 +116,11 @@ def mane(mane, gencode, outstub):
 
         for ent in blocks:
             annotation = "|".join([*attributes, row.strand, str(ent["type"]), str(ent["num"])])
+
+            if liftover:
+                # start/end flip fix, only seems necessary if liftover used
+                if ent["start"] > ent["end"]:
+                    ent["start"], ent["end"] = ent["end"], ent["start"]
             item = [row.chrom, str(ent["start"] - 1), str(ent["end"]), annotation]  # half-open bed style output
             if "_" in row.chrom:
                 result_alts.append(item)
